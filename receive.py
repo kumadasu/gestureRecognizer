@@ -2,15 +2,10 @@ import serial
 import numpy as np
 import matplotlib.pyplot as plt
 
-input = '1 3.0 false hello'
-(a, b, c, d) = [t(s) for t, s in zip((int,float,bool,str), input.split())]
-print(a, b, c, d)
-
 with serial.Serial('/dev/ttyUSB0', 115200, timeout=3) as ser:
-    hpb = [0, 0, 0]
+    hpb = [[0, 0, 0]]
 
-    # while 1:
-    for num in range(1,100):
+    for num in range(1,5000):
         line = ser.readline()
 
         # Send character to start DMP streaming when timeout occurs.
@@ -30,5 +25,7 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=3) as ser:
         print(header, h, p, b)
 
         hpb = np.vstack([hpb, [h, p, b]])
-plt.plot(hpb)
-plt.show()
+        if num % 100 == 0 :
+            plt.cla
+            plt.plot(hpb)
+            plt.pause(0.0000001)
