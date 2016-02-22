@@ -13,12 +13,12 @@ def projection_to_plane(quat):
 
 
 fig, ax = plt.subplots()
-
+plt.axis('off')
 x_data = []
 y_data = []
 
-points, = ax.plot(x_data, y_data, marker='o', linestyle='--')
-size = 1.5
+points, = ax.plot(x_data, y_data, marker='None', linestyle='solid', linewidth=20, color='black')
+size = 1.2
 ax.set_xlim(-size, size)
 ax.set_ylim(-size, size)
 
