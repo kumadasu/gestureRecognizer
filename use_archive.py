@@ -67,9 +67,9 @@ def classify_with_archive(archive, image_files, use_gpu=True):
     assert caffemodel is not None, 'Caffe model file not found'
     assert deploy_file is not None, 'Deploy file not found'
 
-    classify(caffemodel, deploy_file, image_files,
+    classifications = classify(caffemodel, deploy_file, image_files,
             mean_file=mean_file, labels_file=labels_file, use_gpu=use_gpu)
-
+    return classifications
 
 if __name__ == '__main__':
     script_start_time = time.time()

@@ -1,10 +1,10 @@
 import serial
 import matplotlib.pyplot as plt
+import numpy as np
 from use_archive import classify_with_archive
 
 imgname = 'test.png'
 digits_archive_file = '/home/kumadasu/Downloads/20160221-235633-61bc_epoch_30.0.tar.gz'
-
 
 def projection_to_plane(quat):
     w = quat[0]
@@ -62,4 +62,18 @@ with serial.Serial('/dev/ttyUSB0', 115200, timeout=3) as ser:
                 plt.pause(0.0000001)
         plt.savefig(imgname, format='png')
 
-classify_with_archive(digits_archive_file, [imgname], use_gpu=False)
+classifications = classify_with_archive(digits_archive_file, [imgname], use_gpu=False)
+
+labels = []
+scores = []
+for classification in classifications[0]:
+    labels.append(classification[0])
+    scores.append(classification[1]/100)
+class_num = len(labels)
+
+ind = np.arange(start=0, stop=size, step=size/class_num)
+width = size/class_num
+bar = plt.bar(ind, scores, width=width, bottom=-size)
+plt.xticks(ind+width/2., labels)
+plt.axis('on')
+plt.show()

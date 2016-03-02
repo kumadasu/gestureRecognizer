@@ -220,6 +220,7 @@ def classify(caffemodel, deploy_file, image_files,
         for label, confidence in classification:
             print '{:9.4%} - "{}"'.format(confidence/100.0, label)
         print
+    return classifications
 
 
 if __name__ == '__main__':
