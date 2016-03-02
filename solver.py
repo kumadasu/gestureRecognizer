@@ -1,24 +1,65 @@
-import caffe
-import skimage.io
-import numpy as np
+import serial
+import matplotlib.pyplot as plt
+from use_archive import classify_with_archive
 
-imgname = 'test10.png'
-modelname = 'lenet_gesture64/deploy.prototxt'
-pretrained_file = 'lenet_gesture64/snapshot_iter_210.caffemodel'
-
-
-# NVIDIA/caffe-0.14 load_image 'color=False' does not work.
-# img = caffe.io.load_image(imgname, color=False)
-def load_image_as_gray():
-    img = skimage.img_as_float(skimage.io.imread(imgname, as_grey=True)).astype(np.float32)
-    if img.ndim == 2:
-        img = img[:, :, np.newaxis]
-    elif img.shape[2] == 4:
-        img = img[:, :, :3]
-    return caffe.io.resize_image(img, (64, 64))
+imgname = 'test.png'
+digits_archive_file = '/home/kumadasu/Downloads/20160221-235633-61bc_epoch_30.0.tar.gz'
 
 
-caffe.set_mode_cpu()
-net = caffe.Classifier(modelname, pretrained_file, image_dims=(64, 64))
-scores = net.predict([load_image_as_gray()], oversample=False)
-print(scores)
+def projection_to_plane(quat):
+    w = quat[0]
+    x = quat[1]
+    y = quat[2]
+    z = quat[3]
+    return [2*(x*y-w*z), 2*(x*z+w*y)]
+
+
+fig, ax = plt.subplots()
+plt.axis('off')
+x_data = []
+y_data = []
+
+points, = ax.plot(x_data, y_data, marker='None', linestyle='solid', linewidth=10, color='black')
+size = 1.2
+ax.set_xlim(-size, size)
+ax.set_ylim(-size, size)
+
+with serial.Serial('/dev/ttyUSB0', 115200, timeout=3) as ser:
+    for i in range(1):
+        x_data = []
+        y_data = []
+        for num in range(1,800):
+            line = ser.readline()
+
+            # Send character to start DMP streaming when timeout occurs.
+            if not line:
+                print('send starting character')
+                ser.write(b' ')
+                continue
+
+            # Only print line if it is not formatted.
+            test = line.strip(b'\r\n').split(b'\t')
+            if not len(test) == 5:
+                print(line)
+                continue
+
+            # Treat strings as float if it is formatted.
+            (header, w, x, y, z) = [t(s) for t, s in zip((str, float, float, float, float), line.strip(b'\r\n').split(b'\t'))]
+
+            # Construct quaternion
+            quat = [w, x, y, z]
+            norm = w*w+x*x+y*y+z*z
+            quat[:] = [val/norm for val in quat]
+
+            # Calculate coordinate
+            x_coord, y_coord = projection_to_plane(quat)
+
+            # Draw points
+            x_data.append(x_coord)
+            y_data.append(y_coord)
+            points.set_data(x_data, y_data)
+            if num % 20 == 0:
+                plt.pause(0.0000001)
+        plt.savefig(imgname, format='png')
+
+classify_with_archive(digits_archive_file, [imgname], use_gpu=False)
