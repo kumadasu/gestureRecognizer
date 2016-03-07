@@ -11,7 +11,7 @@ def projection_to_plane(quat):
     x = quat[1]
     y = quat[2]
     z = quat[3]
-    return [2*(x*y-w*z), 2*(x*z+w*y)]
+    return [-2*(w*z+x*y), -2*(-w*y+x*z)]
 
 
 fig, ax = plt.subplots()
